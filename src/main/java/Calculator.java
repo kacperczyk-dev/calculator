@@ -20,7 +20,7 @@ public class Calculator {
     public static Queue<String> convertToPostfix(String infix) {
         infix = infix.trim();
 
-        Stack<String> symbols = new Stack<>();
+        Stack<String> tokens = new Stack<>();
         Queue<String> postfix  = new ArrayDeque<>();
 
         Stream.of(infix.split(" ")).forEach(token -> {
@@ -36,20 +36,30 @@ public class Calculator {
             if (value != null) {
                 postfix.add(token);
             } else {
-                String lastSymbol = symbols.peek();
-                if ((token.equals("+") || token.equals("-")) && (lastSymbol.equals("*") || lastSymbol.equals("/"))) {
-                    postfix.add(symbols.pop());
-                    symbols.push(token);
-                } else if (token.equals(")")) {
-                    if(!symbols.contains("(")) throw new IllegalArgumentException("Invalid formula, no opening bracket found");
-                    while(!symbols.empty() && "(".equals(postfix.peek())) {
-                        postfix.add(symbols.pop());
-                    }
+                if(tokens.isEmpty()) {
+                    if(")".equals(token)) throw new IllegalArgumentException("Invalid token, formula cannot start with a closing bracket");
+                    tokens.push(token);
                 } else {
-                    symbols.push(token);
+                    String lastSymbol = tokens.peek();
+                    if ((token.equals("+") || token.equals("-")) && ("*".equals(lastSymbol) || "/".equals(lastSymbol))) {
+                        postfix.add(tokens.pop());
+                        tokens.push(token);
+                    } else if (token.equals(")")) {
+                        if(!tokens.contains("(")) throw new IllegalArgumentException("Invalid formula, no opening bracket found");
+                        while(!tokens.empty()) {
+                            if(!"(".equals(postfix.peek())) {
+                                postfix.add(tokens.pop());
+                            }
+                            tokens.pop();
+                        }
+                    } else {
+                        tokens.push(token);
+                    }
                 }
             }
         });
+
+        postfix.addAll(tokens);
 
         return postfix;
     }
