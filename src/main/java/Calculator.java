@@ -6,15 +6,57 @@ import java.util.stream.Stream;
 
 public class Calculator {
 
-    private static Set<String> supportedTokens = Set.of("+", "-", "*", "/", "(", ")");
+    private static final Set<String> supportedTokens = Set.of("+", "-", "*", "/", "(", ")");
 
     public static Double process(String formula) {
         if(formula == null || formula.isBlank()) throw new IllegalArgumentException("Formula should not be null or blank");
-
         Queue<String> postfix = convertToPostfix(formula);
+        return processPostfix(postfix);
+    }
+
+    public static Double processPostfix(Queue<String> postfix) {
+        Stack<Double> numbers = new Stack<>();
+        postfix.forEach(token -> {
+            Double number = tryToParseDouble(token);
+            if(number == null) {
+                Double result = switch (token) {
+                    case "+" -> add(numbers.pop(), numbers.pop());
+                    case "-" -> subtract(numbers.pop(), numbers.pop());
+                    case "*" -> multiply(numbers.pop(), numbers.pop());
+                    case "/" -> divide(numbers.pop(), numbers.pop());
+                    default -> throw new IllegalArgumentException("Token not supported: " + token);
+                };
+                numbers.push(result);
+            } else {
+                numbers.push(number);
+            }
+        });
+        return numbers.pop();
+    }
+
+    private static Double divide(Double second, Double first) {
+        return first / second;
+    }
+
+    private static Double multiply(Double second, Double first) {
+        return first * second;
+    }
+
+    private static Double subtract(Double second, Double first) {
+        return first - second;
+    }
+
+    private static Double add(Double second, Double first) {
+        return first + second;
+    }
 
 
-        return 0.0;
+    public static Double tryToParseDouble(String number) {
+        try {
+            return Double.parseDouble(number);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public static Queue<String> convertToPostfix(String infix) {
