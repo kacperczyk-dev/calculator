@@ -8,13 +8,63 @@ public class Calculator {
 
     private static final Set<String> supportedTokens = Set.of("+", "-", "*", "/", "(", ")");
 
-    public static Double process(String formula) {
-        if(formula == null || formula.isBlank()) throw new IllegalArgumentException("Formula should not be null or blank");
-        Queue<String> postfix = convertToPostfix(formula);
-        return processPostfix(postfix);
+    private Calculator() {}
+
+    public static Double process(String equation) {
+        return processPostfix(convertToPostfix(equation));
     }
 
-    public static Double processPostfix(Queue<String> postfix) {
+    private static int precedence(String operator) {
+        if("(".equals(operator)) return -1;
+        if("*".equals(operator) || "/".equals(operator)) return 2;
+        if("+".equals(operator) || "-".equals(operator)) return 1;
+        throw new IllegalArgumentException("Operator not supported: " + operator);
+    }
+
+    private static Queue<String> convertToPostfix(String equation) {
+        if(equation == null || equation.isBlank()) throw new IllegalArgumentException("Equation should not be null or blank");
+        equation = equation.trim();
+
+        Stack<String> tokens = new Stack<>();
+        Queue<String> postfix  = new ArrayDeque<>();
+
+        Stream.of(equation.split(" ")).forEach(token -> {
+            Double value = tryToParseDouble(token);
+            if (value != null) {
+                postfix.add(token);
+            } else {
+                if (!supportedTokens.contains(token)) throw new IllegalArgumentException("Invalid token: " + token);
+                if (token.equals(")")) {
+                    if(!tokens.contains("(")) throw new IllegalArgumentException("Invalid equation, no opening bracket found for closing bracket");
+                    while(!tokens.empty()) {
+                        String nextToken = tokens.pop();
+                        if("(".equals(nextToken)) {
+                            break;
+                        }
+                        postfix.add(nextToken);
+                    }
+                } else if("(".equals(token)) {
+                    tokens.push(token);
+                } else {
+                    int lastTokenPrecedence = tokens.isEmpty() ? -1 : precedence(tokens.peek());
+                    int currTokenPrecedence = precedence(token);
+                    while(lastTokenPrecedence >= currTokenPrecedence) {
+                        postfix.add(tokens.pop());
+                        lastTokenPrecedence = tokens.isEmpty() ? -1 : precedence(tokens.peek());
+                    }
+                    tokens.push(token);
+                }
+            }
+        });
+        if(tokens.contains("(") || tokens.contains(")")) throw new IllegalArgumentException("Unclosed brackets found in the equation: " + equation);
+        while(!tokens.empty()) {
+            postfix.add(tokens.pop());
+        }
+        return postfix;
+    }
+
+    private static Double processPostfix(Queue<String> postfix) {
+        if(postfix == null || postfix.isEmpty()) throw new IllegalArgumentException("Postfix should not be null or blank.");
         Stack<Double> numbers = new Stack<>();
         postfix.forEach(token -> {
             Double number = tryToParseDouble(token);
@@ -31,6 +81,7 @@ public class Calculator {
                 numbers.push(number);
             }
         });
+        if (numbers.empty() || numbers.size() > 1) throw new IllegalArgumentException("Postifx notation incorrect: " + postfix);
         return numbers.pop();
     }
 
@@ -50,60 +101,11 @@ public class Calculator {
         return first + second;
     }
 
-
-    public static Double tryToParseDouble(String number) {
+    private static Double tryToParseDouble(String number) {
         try {
             return Double.parseDouble(number);
         } catch (NumberFormatException e) {
             return null;
         }
     }
-
-    public static Queue<String> convertToPostfix(String infix) {
-        infix = infix.trim();
-
-        Stack<String> tokens = new Stack<>();
-        Queue<String> postfix  = new ArrayDeque<>();
-
-        Stream.of(infix.split(" ")).forEach(token -> {
-            Double value = null;
-            try {
-                value = Double.parseDouble(token.trim());
-            } catch (NumberFormatException e) {
-                // do nothing
-            }
-            if (value == null && !supportedTokens.contains(token)) {
-                throw new IllegalArgumentException("Invalid token: " + token);
-            }
-            if (value != null) {
-                postfix.add(token);
-            } else {
-                if(tokens.isEmpty()) {
-                    if(")".equals(token)) throw new IllegalArgumentException("Invalid token, formula cannot start with a closing bracket");
-                    tokens.push(token);
-                } else {
-                    String lastSymbol = tokens.peek();
-                    if ((token.equals("+") || token.equals("-")) && ("*".equals(lastSymbol) || "/".equals(lastSymbol))) {
-                        postfix.add(tokens.pop());
-                        tokens.push(token);
-                    } else if (token.equals(")")) {
-                        if(!tokens.contains("(")) throw new IllegalArgumentException("Invalid formula, no opening bracket found");
-                        while(!tokens.empty()) {
-                            if(!"(".equals(postfix.peek())) {
-                                postfix.add(tokens.pop());
-                            }
-                            tokens.pop();
-                        }
-                    } else {
-                        tokens.push(token);
-                    }
-                }
-            }
-        });
-
-        postfix.addAll(tokens);
-
-        return postfix;
-    }
-
 }
