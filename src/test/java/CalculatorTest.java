@@ -38,9 +38,10 @@ class CalculatorTest {
                 new TestCase("( 1 - 1", null, new IllegalArgumentException("Unclosed brackets found in the equation: ( 1 - 1")),
                 new TestCase("(1-1)", null, new IllegalArgumentException("Invalid token: (1-1)")),
                 new TestCase("( 1-1 )", null, new IllegalArgumentException("Invalid token: 1-1")),
-                new TestCase("( 1 - 1", null, new IllegalArgumentException("Unclosed brackets found in the equation: ( 1 - 1")),
                 new TestCase("( 1 - 1 ) )", null, new IllegalArgumentException("Invalid equation, no opening bracket found for closing bracket")),
-                new TestCase("( ( 1 - 1 ))", null, new IllegalArgumentException("Invalid token: ))"))
+                new TestCase("( ( 1 - 1 ))", null, new IllegalArgumentException("Invalid token: ))")),
+                new TestCase("( 1 % 1 )", null, new IllegalArgumentException("Invalid token: %")),
+                new TestCase("( 1 ** 1 )", null, new IllegalArgumentException("Invalid token: **"))
         );
 
         testCases.forEach(testCase -> {
