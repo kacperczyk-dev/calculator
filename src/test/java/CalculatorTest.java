@@ -41,14 +41,19 @@ class CalculatorTest {
                 new TestCase("( 1 - 1 ) )", null, new IllegalArgumentException("Invalid equation, no opening bracket found for closing bracket")),
                 new TestCase("( ( 1 - 1 ))", null, new IllegalArgumentException("Invalid token: ))")),
                 new TestCase("( 1 % 1 )", null, new IllegalArgumentException("Invalid token: %")),
-                new TestCase("( 1 ** 1 )", null, new IllegalArgumentException("Invalid token: **")),
                 new TestCase("+ ( 1 * 1 )", null, new IllegalArgumentException("Equation should not start or end with an operator")),
                 new TestCase("( 1 * 1 ) -", null, new IllegalArgumentException("Equation should not start or end with an operator")),
-                new TestCase("1 * + 1", null, new IllegalArgumentException("Equation should not have two operators next to each other"))
+                new TestCase("1 * + 1", null, new IllegalArgumentException("Equation should not have two operators next to each other")),
+                new TestCase("( 1 ** 1 )", 1.0, null),
+                new TestCase("2 ** 3 ** 2", 512.0, null),
+                new TestCase("7 + 2 ** 3 ** 2", 519.0, null),
+                new TestCase("2 ** 3", 8.0, null),
+                new TestCase("3 ** 2", 9.0, null)
         );
 
         testCases.forEach(testCase -> {
             try {
+                System.out.println(testCase.input + " ");
                 Double result = Calculator.process(testCase.input);
                 assertEquals(testCase.expected, result);
             } catch (Exception e) {

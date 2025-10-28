@@ -1,16 +1,14 @@
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Stream;
 
 public class Calculator {
 
-    private static final Set<String> supportedTokens = Set.of("+", "-", "*", "/", "(", ")");
-    private static final Set<String> supportedOperators = Set.of("+", "-", "*", "/");
+    private static final Set<String> supportedTokens = Set.of("+", "-", "*", "/", "(", ")", "**");
+    private static final Set<String> supportedOperators = Set.of("+", "-", "*", "/", "**");
+    private static final Set<String> leftAssociativeOperators = Set.of("+", "-", "*", "/");
 
     private Calculator() {}
 
@@ -20,6 +18,7 @@ public class Calculator {
 
     private static int precedence(String operator) {
         if("(".equals(operator)) return -1;
+        if("**".equals(operator)) return 3;
         if("*".equals(operator) || "/".equals(operator)) return 2;
         if("+".equals(operator) || "-".equals(operator)) return 1;
         throw new IllegalArgumentException("Operator not supported: " + operator);
@@ -59,7 +58,7 @@ public class Calculator {
                     if(wasLastItemOperator) throw new IllegalArgumentException("Equation should not have two operators next to each other");
                     int lastTokenPrecedence = tokens.isEmpty() ? -1 : precedence(tokens.peek());
                     int currTokenPrecedence = precedence(token);
-                    while (lastTokenPrecedence >= currTokenPrecedence) {
+                    while (lastTokenPrecedence > currTokenPrecedence || (lastTokenPrecedence == currTokenPrecedence && leftAssociativeOperators.contains(tokens.peek()))) {
                         postfix.add(tokens.pop());
                         lastTokenPrecedence = tokens.isEmpty() ? -1 : precedence(tokens.peek());
                     }
@@ -85,6 +84,7 @@ public class Calculator {
                     case "+" -> add(numbers.pop(), numbers.pop());
                     case "-" -> subtract(numbers.pop(), numbers.pop());
                     case "*" -> multiply(numbers.pop(), numbers.pop());
+                    case "**" -> pow(numbers.pop(), numbers.pop());
                     case "/" -> divide(numbers.pop(), numbers.pop());
                     default -> throw new IllegalArgumentException("Token not supported: " + token);
                 };
@@ -103,6 +103,10 @@ public class Calculator {
 
     private static Double multiply(Double second, Double first) {
         return first * second;
+    }
+
+    private static Double pow(Double second, Double first) {
+        return Math.pow(first, second);
     }
 
     private static Double subtract(Double second, Double first) {
